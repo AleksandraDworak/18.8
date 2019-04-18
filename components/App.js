@@ -17,31 +17,48 @@ handleSearch: function(searchingText) {
     this.setState({
       loading: true  
     });
-    this.getGif(searchingText, function(gif) { 
-      this.setState({ 
-        loading: false,  
-        gif: gif,  
-        searchingText: searchingText  
-      });
-    }.bind(this));
+    this.getGif(searchingText)
+    .then(response => this.displayGif(response, searchingText));  
 },
 
-getGif: function(searchingText, callback) {  
+displayGif: function(gif, searchingText){
+    this.setState({ 
+        loading: false,  
+        searchingText: searchingText,
+        gif: gif
+    })
+    },
+
+getGif: function(searchingText) {  
   var url = prefix + GIPHY_API_URL + '/v1/gifs/random?api_key=' + GIPHY_PUB_KEY + '&tag=' + searchingText;  
-  var xhr = new XMLHttpRequest(); 
-  xhr.open('GET', url);
-  xhr.onload = function() {
-      if (xhr.status === 200) {
-         var data = JSON.parse(xhr.responseText).data; 
+  var request = new XMLHttpRequest(); 
+  
+  return new Promise(function (resolve, reject) {
+  request.onload = function() {
+      if (request.status === 200) {
+         var data = JSON.parse(request.responseText).data; 
           var gif = {  
               url: data.fixed_width_downsampled_url,
               sourceUrl: data.url
           };
-          callback(gif); 
-      }
+          resolve(gif);
+         
+          
+      } else {
+        reject({
+            status: request.status,
+            statusText: request.statusText
+        });
+    }
   };
-  xhr.send();
+  
+  request.open('GET', url);
+  request.send();
+});
 },
+
+
+
 
 render: function() {
 
